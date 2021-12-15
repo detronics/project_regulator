@@ -1,6 +1,6 @@
 import serial
 import tkinter as tk
-
+from tkinter import messagebox as mb
 
 class Tasks(tk.Frame):
     def __init__(self, main):
@@ -39,8 +39,14 @@ class Tasks(tk.Frame):
         confirmation.place(x=130, y=120)
 
     def close_window(self):
-        print(self.new_value.get())
-        self.window.destroy()
+        if self.new_value.get().isdigit() and float(self.new_value.get()) < 7.5:
+            print(self.new_value.get())
+            self.window.destroy()
+        elif not self.new_value.get().isdigit():
+            mb.showerror("Ошибка", "Должно быть введено число")
+        elif float(self.new_value.get()) > 7.5:
+            mb.showerror("Ошибка", "Значение должно быть меньше 7,5 кгс/см2")
+
 
 
 
