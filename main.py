@@ -9,7 +9,7 @@ class Tasks(tk.Frame):
         self.init_main()
 
     def init_main(self):
-        heading_inlet = tk.Label( font=('times', 12), justify=tk.LEFT, anchor='nw',text='Давление до регулятора')
+        heading_inlet = tk.Label( font=('times', 12),bg='black', fg='green', justify=tk.LEFT, anchor='nw',text='Давление до регулятора')
         heading_outlet = tk.Label(font=('times', 12), justify=tk.LEFT, anchor='nw', text='Давление после регулятора')
         needle_position = tk.Label(font=('times', 12), justify=tk.LEFT, anchor='nw', text='Положение иглы-дозатора')
         self.pressure_inlet = tk.Label(bg="grey", font=('times', 20), justify=tk.LEFT, anchor='nw',text='0.00 MPa')
@@ -22,10 +22,10 @@ class Tasks(tk.Frame):
         self.pressure_inlet.place(x=30, y=50)
         self.pressure_outlet.place(x=250, y=50)
         self.regulator_position.place(x=200, y=120)
-        b_open.place(x=100, y=170)
-        b_close.place(x=160, y=170)
-        b_new_value.place(x=210, y=170)
-        b_start_rp.place(x=300, y=170)
+        b_open.place(x=100, y=300)
+        b_close.place(x=160, y=300)
+        b_new_value.place(x=210, y=300)
+        b_start_rp.place(x=300, y=300)
         heading_inlet.place(x=0, y=10)
         heading_outlet.place(x=220, y=10)
         needle_position.place(x=110, y=100)
