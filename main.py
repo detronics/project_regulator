@@ -2,6 +2,8 @@ import serial
 import tkinter as tk
 from tkinter import messagebox as mb
 
+port = serial.Serial(port='COM6', baudrate=9600)
+print (port.readline())
 class Tasks(tk.Frame):
     def __init__(self, main):
         super().__init__()
