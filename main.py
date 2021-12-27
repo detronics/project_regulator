@@ -1,20 +1,24 @@
 import serial
 import tkinter as tk
+from tkinter import ttk
 import threading
 from tkinter import messagebox as mb
 import serial.tools.list_ports
 
 
-port = serial.Serial( baudrate=115200)
+port = serial.Serial(baudrate=115200)
+avaible_ports = [comport.device for comport in serial.tools.list_ports.comports()]
+
 
 class Tasks(tk.Frame):
     def __init__(self, main):
         super().__init__()
         self.main = main
-        thread = threading.Thread(target=self.onRead, daemon=True)
+        self.thread = threading.Thread(target=self.onRead, daemon=True)
+
         self.data = ['1', '2', '3', '0', ]
         self.init_main()
-        thread.start()
+
         self.pressure_inlet = tk.Label(bg='black', fg='green', font=('times', 12), justify=tk.LEFT, anchor='nw',
                                        text='0.00')
         self.pressure_outlet = tk.Label(bg='black', fg='green', font=('times', 12), justify=tk.LEFT, anchor='nw',
@@ -32,6 +36,10 @@ class Tasks(tk.Frame):
         p_min = tk.Label(font=('times', 12), bg='black', fg='green', justify=tk.LEFT, anchor='nw', text=self.data[1])
         p_max = tk.Label(font=('times', 12), bg='black', fg='green', justify=tk.LEFT, anchor='nw', text=self.data[0])
         p_value = tk.Label(font=('times', 12), bg='black', fg='green', justify=tk.LEFT, anchor='nw', text=self.data[2])
+        choose_port = tk.Label(font=('times', 12), justify=tk.LEFT,bg='#476B8F',fg='white', anchor='nw', text='Выберите порт')
+        self.ports = ttk.Combobox(values=avaible_ports, width=11)
+        b_connect = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Подключить порт',
+                              command=self.onRead)
         b_open = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Открыть регулятор',
                            command=lambda: port.write('0,0;'.encode()))
         b_close = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Закрыть регулятор',
@@ -42,8 +50,11 @@ class Tasks(tk.Frame):
                                 command=self.input_box)
         b_start_rp = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Старт', width='5')
         b_stop_rp = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Стоп', width='5')
+        b_connect.place(x=485, y=80)
+        self.ports.place(x=492, y=55)
         b_open.place(x=950, y=25)
         b_close.place(x=950, y=60)
+        choose_port.place(x=485, y=25)
         b_pmin.place(x=190, y=35)
         b_pmax.place(x=190, y=142)
         b_new_value.place(x=190, y=89)
@@ -77,20 +88,19 @@ class Tasks(tk.Frame):
             mb.showerror("Ошибка", "Значение должно быть меньше 7,5 кгс/см2")
 
     def onRead(self):
-
-        port.setPort(port='/dev/ttyUSB0')
+        # self.thread.start()
+        port.setPort(port=self.ports.get())
         port.open()
-        while True:
-            rx = port.readline()
-            rxs = str(rx, 'utf-8').strip()
-            self.data = rxs.split(',')
-            print(data)
+        # while True:
+        #     rx = port.readline()
+        #     rxs = str(rx, 'utf-8').strip()
+        #     self.data = rxs.split(',')
+        #     print(self.data)
 
 
 
 
 if __name__ == '__main__':
-    while True:
         root = tk.Tk()
         app = Tasks(root)
         root.title('Главное окно')

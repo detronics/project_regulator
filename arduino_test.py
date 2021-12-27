@@ -9,22 +9,16 @@
 
 
 
-import serial
-
-ser=serial.Serial(port='/dev/ttyUSB0',baudrate=115200)
-
-while True:
-    rx = ser.readline()
-    rxs = str(rx, 'utf-8').strip()
-    data = rxs.split(',')
-    print (data)
-
-
-
-
-
-
-
+# import serial
+#
+# ser=serial.Serial(port='/dev/ttyUSB0',baudrate=115200)
+#
+# while True:
+#     rx = ser.readline()
+#     rxs = str(rx, 'utf-8').strip()
+#     data = rxs.split(',')
+#     print (data)
+#
 
 # def onRead():
     # if not serial.canReadLine(): return     # выходим если нечего читать
@@ -95,6 +89,5 @@ while True:
 # def servoControl(val):
 #     serialSend([2, val])
 #
-#
-#
+
 # serial.readyRead.connect(onRead)
