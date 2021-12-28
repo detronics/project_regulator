@@ -6,7 +6,7 @@ from tkinter import messagebox as mb
 import serial.tools.list_ports
 
 
-port = serial.Serial(baudrate=115200)
+port = serial.Serial(baudrate=115200, timeout=None)
 avaible_ports = [comport.device for comport in serial.tools.list_ports.comports()]
 
 
@@ -14,16 +14,13 @@ class Tasks(tk.Frame):
     def __init__(self, main):
         super().__init__()
         self.main = main
-        self.thread = threading.Thread(target=self.onRead, daemon=True)
-
         self.data = ['1', '2', '3', '0', ]
         self.init_main()
-
-        self.pressure_inlet = tk.Label(bg='black', fg='green', font=('times', 12), justify=tk.LEFT, anchor='nw',
+        self.pressure_inlet = tk.Label(bg='black', fg='grey', font=('times', 12), justify=tk.LEFT, anchor='nw',
                                        text='0.00')
-        self.pressure_outlet = tk.Label(bg='black', fg='green', font=('times', 12), justify=tk.LEFT, anchor='nw',
+        self.pressure_outlet = tk.Label(bg='black', fg='grey', font=('times', 12), justify=tk.LEFT, anchor='nw',
                                         text='0.00')
-        self.regulator_position = tk.Label(bg='black', fg='green', font=('times', 12), justify=tk.LEFT, anchor='nw',
+        self.regulator_position = tk.Label(bg='black', fg='grey', font=('times', 12), justify=tk.LEFT, anchor='nw',
                                            text='0.0')
         self.pressure_inlet.place(x=260, y=325)
         self.pressure_outlet.place(x=755, y=325)
@@ -33,13 +30,13 @@ class Tasks(tk.Frame):
         self.background = tk.PhotoImage(file='images/Back.png')
         background_label = tk.Label(image=self.background)
         background_label.place(x=0, y=0)
-        p_min = tk.Label(font=('times', 12), bg='black', fg='green', justify=tk.LEFT, anchor='nw', text=self.data[1])
-        p_max = tk.Label(font=('times', 12), bg='black', fg='green', justify=tk.LEFT, anchor='nw', text=self.data[0])
-        p_value = tk.Label(font=('times', 12), bg='black', fg='green', justify=tk.LEFT, anchor='nw', text=self.data[2])
+        p_min = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[1])
+        p_max = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[0])
+        p_value = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[2])
         choose_port = tk.Label(font=('times', 12), justify=tk.LEFT,bg='#476B8F',fg='white', anchor='nw', text='Выберите порт')
         self.ports = ttk.Combobox(values=avaible_ports, width=11)
         b_connect = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Подключить порт',
-                              command=self.onRead)
+                              command=self.connect_port)
         b_open = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Открыть регулятор',
                            command=lambda: port.write('0,0;'.encode()))
         b_close = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Закрыть регулятор',
@@ -87,15 +84,20 @@ class Tasks(tk.Frame):
         elif float(self.new_value.get()) > 7.5:
             mb.showerror("Ошибка", "Значение должно быть меньше 7,5 кгс/см2")
 
-    def onRead(self):
-        # self.thread.start()
+    def connect_port(self):
         port.setPort(port=self.ports.get())
         port.open()
-        # while True:
-        #     rx = port.readline()
-        #     rxs = str(rx, 'utf-8').strip()
-        #     self.data = rxs.split(',')
-        #     print(self.data)
+        self.onRead()
+
+    def onRead(self):
+        while True:
+            rx = port.readline()
+            rxs = str(rx, 'utf-8').strip()
+            self.data = rxs.split(',')
+            self.pressure_inlet.config( fg='green', text=self.data[0])
+            # self.log.config(text=data)
+            break
+        self.after(100, self.onRead)
 
 
 

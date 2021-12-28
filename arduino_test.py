@@ -8,24 +8,18 @@
 #     portList.append(port.portName())
 
 
-
 # import serial
+# import threading
 #
-# ser=serial.Serial(port='/dev/ttyUSB0',baudrate=115200)
-#
-# while True:
-#     rx = ser.readline()
+# port=serial.Serial(port='COM6',baudrate=115200)
+
+
+# lock = threading.Lock()
+# def onRead():   # выходим если нечего читать
+#     rx = port.readline()
 #     rxs = str(rx, 'utf-8').strip()
 #     data = rxs.split(',')
-#     print (data)
-#
-
-# def onRead():
-    # if not serial.canReadLine(): return     # выходим если нечего читать
-    # rx = port.readline()
-    # rxs = str(rx, 'utf-8').strip()
-    # data = rxs.split(',')
-    # print(data)
+#     print(data)
     # if data[0] == '0':
     #     ui.lcdN.display(data[1])
     #     ui.tempB.setValue(int(float(data[3]) * 10))
@@ -50,7 +44,6 @@
     #     posY += int((int(data[2]) - 512) / 100)
     #     ui.circle.setGeometry(posX, posY, 20, 20)
 
-# onRead()
 
 # def onOpen():
 #     serial.setPortName(ui.comL.currentText())
@@ -89,5 +82,3 @@
 # def servoControl(val):
 #     serialSend([2, val])
 #
-
-# serial.readyRead.connect(onRead)
