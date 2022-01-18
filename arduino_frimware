@@ -107,3 +107,30 @@ void parsing() {
     }
   }
 }
+
+работа с регулятором + мотор
+#include <Stepper.h>
+#include <GyverPID.h>
+#include <PIDtuner.h>
+#include <PIDtuner2.h>
+Stepper myStepper(200, 8, 9, 10, 11); // пины двигла
+GyverPID regulator(0.1, 0, 0, 10);
+void setup() {
+  myStepper.setSpeed(60);          // скорость двигла
+  regulator.setDirection(NORMAL); // направление регулирования (NORMAL/REVERSE). ПО УМОЛЧАНИЮ СТОИТ NORMAL
+  regulator.setLimits(0, 200);    // пределы поставил шаги двигателя
+  regulator.setpoint = 50;        // сообщаем регулятору температуру, которую он должен поддерживать
+  // в процессе работы можно менять коэффициенты
+  //  regulator.Kp = 5.2;
+  //  regulator.Ki += 0.5;
+  //  regulator.Kd = 0;
+
+}
+
+void loop() {
+   int temp;                 // читаем с датчика температуру
+   regulator.input = temp;   // сообщаем регулятору текущую температуру
+
+   myStepper.step(regulator.getResultTimer());
+
+}
