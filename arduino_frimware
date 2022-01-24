@@ -3,7 +3,6 @@
 #define P_out 1
 #define POS 2
 
-
 // дигит пины
 #define STEP_1 2
 #define STEP_2 3
@@ -113,23 +112,22 @@ void parsing() {
 #include <GyverPID.h>
 #include <PIDtuner.h>
 #include <PIDtuner2.h>
-Stepper myStepper(200, 8, 9, 10, 11); // пины двигла
+int sensorPin = A0;
+Stepper myStepper(200, 8, 9); // пины двигла
 GyverPID regulator(0.1, 0, 0, 10);
 void setup() {
-  myStepper.setSpeed(60);          // скорость двигла
+   Serial.begin(115200);
+  myStepper.setSpeed(100);          // скорость двигла
   regulator.setDirection(NORMAL); // направление регулирования (NORMAL/REVERSE). ПО УМОЛЧАНИЮ СТОИТ NORMAL
   regulator.setLimits(0, 200);    // пределы поставил шаги двигателя
   regulator.setpoint = 50;        // сообщаем регулятору температуру, которую он должен поддерживать
-  // в процессе работы можно менять коэффициенты
-  //  regulator.Kp = 5.2;
-  //  regulator.Ki += 0.5;
-  //  regulator.Kd = 0;
-
 }
 
 void loop() {
-   int temp;                 // читаем с датчика температуру
-   regulator.input = temp;   // сообщаем регулятору текущую температуру
+   int temp = analogRead(sensorPin);
+                    // читаем с датчика температуру
+   Serial.println(map(temp, 0, 1023, 0, 200));
+   regulator.input = map(temp, 0, 1023, 0, 200);   // сообщаем регулятору текущую температуру
 
    myStepper.step(regulator.getResultTimer());
 
