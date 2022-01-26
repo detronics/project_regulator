@@ -114,21 +114,167 @@ void parsing() {
 #include <PIDtuner2.h>
 int sensorPin = A0;
 Stepper myStepper(200, 8, 9); // пины двигла
-GyverPID regulator(0.1, 0, 0, 10);
+GyverPID regulator(0.5, 0.5, 0, 100);
 void setup() {
-   Serial.begin(115200);
-  myStepper.setSpeed(100);          // скорость двигла
+   Serial.begin(9600);
+//  regulator.setMode(ON_ERROR);
+  myStepper.setSpeed(1000);          // скорость двигла
   regulator.setDirection(NORMAL); // направление регулирования (NORMAL/REVERSE). ПО УМОЛЧАНИЮ СТОИТ NORMAL
-  regulator.setLimits(0, 200);    // пределы поставил шаги двигателя
-  regulator.setpoint = 50;        // сообщаем регулятору температуру, которую он должен поддерживать
+  regulator.setLimits(-200, 200);    // пределы поставил шаги двигателя
+  regulator.setpoint = 150;        // сообщаем регулятору температуру, которую он должен поддерживать
 }
 
 void loop() {
    int temp = analogRead(sensorPin);
-                    // читаем с датчика температуру
-   Serial.println(map(temp, 0, 1023, 0, 200));
-   regulator.input = map(temp, 0, 1023, 0, 200);   // сообщаем регулятору текущую температуру
+   int value = (map(temp, 0, 1023, 0, 200));
+   Serial.println(value);
+   if (value != regulator.setpoint)
+      {
+      regulator.input = value;
+      myStepper.step(regulator.getResultTimer());
+      }
 
-   myStepper.step(regulator.getResultTimer());
+}
 
+rotate stepper in while
+#include <Stepper.h>
+Stepper myStepper(200, 8, 9);
+const int buttonPin = 13;
+
+void setup() {
+  myStepper.setSpeed(1000);
+  pinMode (13, INPUT);
+}
+
+void loop() {
+   int buttonState = digitalRead(buttonPin);
+//    if (buttonState == HIGH){myStepper.step(20);}
+   while (buttonState == LOW){
+    buttonState = digitalRead(buttonPin);
+    myStepper.step(20);
+    }
+}
+
+
+
+// аналог пины
+#define P_in 0
+#define P_out 1
+#define POS 2
+
+// дигит пины
+//#define STEP_1 2
+//#define STEP_2 3
+#define OPEN 13
+#define CLOSE 5
+
+#include "Stepper.h"
+#include "EncButton.h"
+#include "GParser.h"
+#include "AsyncStream.h"  // асинхронное чтение сериал
+AsyncStream<50> serial(&Serial, ';');
+Stepper myStepper(200, 8, 9);
+int p_min = 0;
+int p_max = 0;
+int p_reg = 0;
+int state_open;
+
+EncButton<EB_TICK, OPEN> btn;
+bool flag = 0;
+
+void setup() {
+  Serial.begin(115200);
+  myStepper.setSpeed(1000);
+  pinMode(13, 1);
+  pinMode(P_in, LOW);
+  pinMode(P_out, LOW);
+  pinMode(POS, LOW);
+  pinMode(OPEN, LOW);
+  pinMode(CLOSE, LOW);
+}
+
+// с ардуино на пк, терминатор \n
+// 0,входное давление,выходное давление,энкодер
+// 1, концевик открытия, концевик закрытия
+
+
+// с пк на ардуино, терминатор ;
+// 0,уставка давления минимального
+// 1,уставка давления максимального
+// 2,уставка давления регулирования
+// 3,начать регулирование
+// 4,остановить регулирование
+// 5,открыть регулятор
+// 6,закрыть регулятор
+
+void loop() {
+  parsing();
+
+  btn.tick();
+  static uint32_t tmr = 0;
+  if (millis() - tmr > 100) {
+    tmr = millis();
+    Serial.print(0);
+    Serial.print(',');
+    Serial.print(analogRead(P_in));
+    Serial.print(',');
+    Serial.print(analogRead(P_out));
+    Serial.print(',');
+    Serial.println(analogRead(POS));
+  }
+
+  static uint32_t tmr2 = 0;
+  if (millis() - tmr2 > 50) {
+    tmr2 = millis();
+    Serial.print(2);
+    Serial.print(',');
+    Serial.print(digitalRead(OPEN));
+    Serial.print(',');
+    Serial.println(digitalRead(CLOSE));
+  }
+
+  if (btn.isClick()) {
+    flag = !flag;
+    Serial.print(1);
+    Serial.print(',');
+    Serial.println(flag);
+  }
+}
+
+// функция парсинга, опрашивать в лупе
+void parsing() {
+  if (serial.available()) {
+    GParser data(serial.buf, ',');  // отдаём парсеру
+    int ints[10];           // массив для численных данных
+    data.parseInts(ints);   // парсим в него
+
+    switch (ints[0]) {
+      case 0: p_min = ints[1];
+        break;
+      case 1:
+        p_max = ints[1];
+        break;
+      case 2:
+        p_reg = ints[1];
+        break;
+      case 3:
+        //Начать регулирование
+        break;
+      case 4:
+        //Остановить регулирование
+        break;
+      case 5:
+        state_open = digitalRead(OPEN);
+        while (state_open == LOW)
+            {
+              myStepper.step(200);
+              state_open = digitalRead(OPEN);
+             }
+
+//        break;
+      case 6:
+        //Закрыть регулятор
+        break;
+    }
+  }
 }

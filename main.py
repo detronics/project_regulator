@@ -38,7 +38,7 @@ class Tasks(tk.Frame):
         b_connect = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Подключить порт',
                               command=self.connect_port)
         b_open = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Открыть регулятор',
-                           command=lambda: port.write('0,0;'.encode()))
+                           command=lambda: port.write('5,0;'.encode()))
         b_close = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Закрыть регулятор',
                             command=lambda: port.write('0,1;'.encode()))
         b_pmin = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Редактировать', command=self.input_box)
