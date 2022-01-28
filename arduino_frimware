@@ -166,25 +166,28 @@ void loop() {
 //#define STEP_1 2
 //#define STEP_2 3
 #define OPEN 13
-#define CLOSE 5
+#define CLOSE 12
 
 #include "Stepper.h"
-#include "EncButton.h"
+#include <GyverPID.h>
 #include "GParser.h"
 #include "AsyncStream.h"  // асинхронное чтение сериал
 AsyncStream<50> serial(&Serial, ';');
 Stepper myStepper(200, 8, 9);
+GyverPID regulator(0.5, 0.5, 0);
 int p_min = 0;
-int p_max = 0;
+int p_max = 7;
 int p_reg = 0;
 int state_open;
+int state_close;
 
-EncButton<EB_TICK, OPEN> btn;
-bool flag = 0;
 
 void setup() {
   Serial.begin(115200);
   myStepper.setSpeed(1000);
+  regulator.setDirection(NORMAL);
+  regulator.setLimits(-200, 200);
+  regulator.setpoint = p_reg;
   pinMode(13, 1);
   pinMode(P_in, LOW);
   pinMode(P_out, LOW);
@@ -210,7 +213,7 @@ void setup() {
 void loop() {
   parsing();
 
-  btn.tick();
+//  btn.tick();
   static uint32_t tmr = 0;
   if (millis() - tmr > 100) {
     tmr = millis();
@@ -233,12 +236,6 @@ void loop() {
     Serial.println(digitalRead(CLOSE));
   }
 
-  if (btn.isClick()) {
-    flag = !flag;
-    Serial.print(1);
-    Serial.print(',');
-    Serial.println(flag);
-  }
 }
 
 // функция парсинга, опрашивать в лупе
@@ -259,7 +256,7 @@ void parsing() {
         break;
       case 3:
         //Начать регулирование
-        break;
+        regulate();
       case 4:
         //Остановить регулирование
         break;
@@ -270,11 +267,24 @@ void parsing() {
               myStepper.step(200);
               state_open = digitalRead(OPEN);
              }
-
-//        break;
       case 6:
-        //Закрыть регулятор
-        break;
+        state_close = digitalRead(CLOSE);
+        while (state_close == LOW)
+            {
+              myStepper.step(-200);
+              state_close = digitalRead(CLOSE);
+             }
     }
   }
 }
+
+void regulate()
+{
+   int pressure = analogRead(P_out);
+   int value = (map(pressure, 0, 1023, 0, 200));
+   if (value != regulator.setpoint)
+      {
+      regulator.input = value;
+      myStepper.step(regulator.getResultTimer());
+      }
+  }

@@ -31,18 +31,18 @@ class Tasks(tk.Frame):
         background_label = tk.Label(image=self.background)
         background_label.place(x=0, y=0)
         p_min = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[1])
-        p_max = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[0])
+        # p_max = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[0])
         p_value = tk.Label(font=('times', 12), bg='black', fg='grey', justify=tk.LEFT, anchor='nw', text=self.data[2])
         choose_port = tk.Label(font=('times', 12), justify=tk.LEFT,bg='#476B8F',fg='white', anchor='nw', text='Выберите порт')
         self.ports = ttk.Combobox(values=avaible_ports, width=11)
         b_connect = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Подключить порт',
                               command=self.connect_port)
         b_open = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Открыть регулятор',
-                           command=lambda: port.write('5,0;'.encode()))
+                           command=lambda: port.write('5;'.encode()))
         b_close = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Закрыть регулятор',
-                            command=lambda: port.write('0,1;'.encode()))
+                            command=lambda: port.write('6;'.encode()))
         b_pmin = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Редактировать', command=self.input_box)
-        b_pmax = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Редактировать', command=self.input_box)
+        # b_pmax = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Редактировать', command=self.input_box)
         b_new_value = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Редактировать',
                                 command=self.input_box)
         b_start_rp = tk.Button(bg='#e6e7e4', bd=0, activebackground='#636362', text='Старт', width='5')
@@ -53,12 +53,12 @@ class Tasks(tk.Frame):
         b_close.place(x=950, y=60)
         choose_port.place(x=485, y=25)
         b_pmin.place(x=190, y=35)
-        b_pmax.place(x=190, y=142)
+        # b_pmax.place(x=190, y=142)
         b_new_value.place(x=190, y=89)
         b_start_rp.place(x=490, y=150)
         b_stop_rp.place(x=550, y=150)
         p_min.place(x=80, y=35)
-        p_max.place(x=80, y=142)
+        # p_max.place(x=80, y=142)
         p_value.place(x=80, y=89)
 
     def input_box(self):
