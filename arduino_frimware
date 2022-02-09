@@ -47,18 +47,21 @@ void loop() {
 }
 
 
-
 // аналог пины
 #define P_in 0
 #define P_out 1
-#define POS 2
+
 
 // дигит пины
 //#define STEP_1 2
 //#define STEP_2 3
 #define OPEN 13
 #define CLOSE 12
+// контакты энкодера
+#define CLK 2
+#define DT 3
 
+#include "GyverEncoder.h"
 #include "Stepper.h"
 #include <GyverPID.h>
 #include "GParser.h"
@@ -66,6 +69,8 @@ void loop() {
 AsyncStream<50> serial(&Serial, ';');
 Stepper myStepper(200, 8, 9);
 GyverPID regulator(0.5, 0.5, 0);
+Encoder enc1(CLK, DT);
+int pos = 0;
 int p_min = 0;
 int p_max = 7;
 int p_reg = 0;
@@ -82,9 +87,10 @@ void setup() {
   pinMode(13, 1);
   pinMode(P_in, LOW);
   pinMode(P_out, LOW);
-  pinMode(POS, LOW);
   pinMode(OPEN, LOW);
   pinMode(CLOSE, LOW);
+  enc1.setType(TYPE1);
+  enc1.setFastTimeout(40);
 }
 
 // с ардуино на пк, терминатор \n
@@ -103,6 +109,7 @@ void setup() {
 
 void loop() {
   parsing();
+  enc1.tick();
 
 //  btn.tick();
   static uint32_t tmr = 0;
@@ -114,7 +121,7 @@ void loop() {
     Serial.print(',');
     Serial.print(analogRead(P_out));
     Serial.print(',');
-    Serial.println(analogRead(POS));
+    Serial.println(pos);
   }
 
   static uint32_t tmr2 = 0;
@@ -131,6 +138,8 @@ void loop() {
 
 // функция парсинга, опрашивать в лупе
 void parsing() {
+  if (enc1.isRight()) pose++;
+  if (enc1.isLeft()) pos--;
   if (serial.available()) {
     GParser data(serial.buf, ',');  // отдаём парсеру
     int ints[10];           // массив для численных данных
@@ -180,24 +189,22 @@ void regulate()
       }
   }
 
- работа с энкодером
- #define CLK 2
- #define DT 3
+void start()
+{
+  state_open = digitalRead(OPEN);
+  while (state_open == LOW)
+       {
+          myStepper.step(200);
+          state_open = digitalRead(OPEN);
+       }
+   int pos_min = pos;
+   state_close = digitalRead(CLOSE);
+   while (state_close == LOW)
+       {
+          myStepper.step(-200);
+          state_close = digitalRead(CLOSE);
+        }
+    int pos_max = pos;
+    pos = (pos,pos_min, pos_max, 0,100)
 
- #include "GyverEncoder.h"
- Encoder enc1(CLK, DT);
- int value = 0;
- void setup() {
-   Serial.begin(9600);
-   enc1.setType(TYPE1);        // тип энкодера TYPE1 одношаговый, TYPE2 двухшаговый. Если ваш энкодер работает странно, смените тип\=
-   enc1.setFastTimeout(40);    // таймаут на скорость isFastR. По умолч. 50
- }
- void loop() {
-   // обязательная функция отработки. Должна постоянно опрашиваться
-   enc1.tick();
-   if (enc1.isRight()) value++;        // если был поворот направо, увеличиваем на 1
-   if (enc1.isLeft()) value--;         // если был поворот налево, уменьшаем на 1
-   if (enc1.isTurn()) {                // если был совершён поворот (индикатор поворота в любую сторону)
-     Serial.println(value);            // выводим значение при повороте
-   }
- }
+  }
