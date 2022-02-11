@@ -205,6 +205,176 @@ void start()
           state_close = digitalRead(CLOSE);
         }
     int pos_max = pos;
+    Serial.println(pos);
     pos = (pos,pos_min, pos_max, 0,100)
 
+  }
+
+вторая версия
+// аналог пины
+#define P_in 0
+#define P_out 1
+
+
+// дигит пины
+//#define STEP_1 2
+//#define STEP_2 3
+#define OPEN 13
+#define CLOSE 12
+// контакты энкодера
+#define CLK 2
+#define DT 3
+
+#include "GyverEncoder.h"
+#include "Stepper.h"
+#include <GyverPID.h>
+#include "GParser.h"
+#include "AsyncStream.h"  // асинхронное чтение сериал
+AsyncStream<50> serial(&Serial, ';');
+Stepper myStepper(200, 8, 9);
+GyverPID regulator(0.5, 0.5, 0);
+Encoder enc1(CLK, DT);
+int pos = 0;
+int p_min = 0;
+int p_max = 7;
+int p_reg = 0;
+int state_open;
+int state_close;
+
+
+void setup() {
+  Serial.begin(115200);
+  myStepper.setSpeed(1000);
+  regulator.setDirection(NORMAL);
+  regulator.setLimits(-200, 200);
+  regulator.setpoint = p_reg;
+  pinMode(13, 1);
+  pinMode(P_in, LOW);
+  pinMode(P_out, LOW);
+  pinMode(OPEN, LOW);
+  pinMode(CLOSE, LOW);
+  enc1.setType(TYPE1);
+  enc1.setFastTimeout(40);
+  starts();
+}
+
+// с ардуино на пк, терминатор \n
+// 0,входное давление,выходное давление,энкодер
+// 1, концевик открытия, концевик закрытия
+
+
+// с пк на ардуино, терминатор ;
+// 0,уставка давления минимального
+// 1,уставка давления максимального
+// 2,уставка давления регулирования
+// 3,начать регулирование
+// 4,остановить регулирование
+// 5,открыть регулятор
+// 6,закрыть регулятор
+
+void loop() {
+//  parsing();
+  enc1.tick();
+
+//  btn.tick();
+//  static uint32_t tmr = 0;
+//  if (millis() - tmr > 100) {
+//    tmr = millis();
+//    Serial.print(0);
+//    Serial.print(',');
+//    Serial.print(analogRead(P_in));
+//    Serial.print(',');
+//    Serial.print(analogRead(P_out));
+//    Serial.print(',');
+//    Serial.println(pos);
+//  }
+//
+//  static uint32_t tmr2 = 0;
+//  if (millis() - tmr2 > 50) {
+//    tmr2 = millis();
+//    Serial.print(2);
+//    Serial.print(',');
+//    Serial.print(digitalRead(OPEN));
+//    Serial.print(',');
+//    Serial.println(digitalRead(CLOSE));
+//  }
+//
+}
+
+// функция парсинга, опрашивать в лупе
+void parsing() {
+  if (enc1.isRight()) pos++;
+  if (enc1.isLeft()) pos--;
+  if (serial.available()) {
+    GParser data(serial.buf, ',');  // отдаём парсеру
+    int ints[10];           // массив для численных данных
+    data.parseInts(ints);   // парсим в него
+
+    switch (ints[0]) {
+      case 0: p_min = ints[1];
+        break;
+      case 1:
+        p_max = ints[1];
+        break;
+      case 2:
+        p_reg = ints[1];
+        break;
+      case 3:
+        //Начать регулирование
+        regulate();
+      case 4:
+        //Остановить регулирование
+        break;
+      case 5:
+        state_open = digitalRead(OPEN);
+        while (state_open == LOW)
+            {
+              myStepper.step(200);
+              state_open = digitalRead(OPEN);
+             }
+      case 6:
+        state_close = digitalRead(CLOSE);
+        while (state_close == LOW)
+            {
+              myStepper.step(-200);
+              state_close = digitalRead(CLOSE);
+             }
+    }
+  }
+}
+
+void regulate()
+{
+   int pressure = analogRead(P_out);
+   int value = (map(pressure, 0, 1023, 0, 200));
+   if (value != regulator.setpoint)
+      {
+      regulator.input = value;
+      myStepper.step(regulator.getResultTimer());
+      }
+  }
+
+void starts(){
+  Serial.println(pos);
+  state_open = digitalRead(OPEN);
+  while (state_open == LOW)
+       {
+          enc1.tick();
+          if (enc1.isLeft()) pos--;
+//          myStepper.step(200);
+          state_open = digitalRead(OPEN);
+       }
+   int pos_min = pos;
+   Serial.println(pos_min);
+   state_close = digitalRead(CLOSE);
+   while (state_close == LOW)
+       {
+          enc1.tick();
+          if (enc1.isRight()) pos++;
+//          myStepper.step(-200);
+          state_close = digitalRead(CLOSE);
+        }
+    int pos_max = pos;
+    Serial.println(pos_max);
+    pos = (pos,pos_min, pos_max, 0,100);
   }
